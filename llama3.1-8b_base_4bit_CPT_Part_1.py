@@ -8,6 +8,26 @@ max_seq_length = 4096 # Supports RoPE Scaling automatically
 dtype = None # None for auto detection. Float16 for Tesla T4, Bfloat16 for Ampere+
 load_in_4bit = True # Use 4bit quantization
 
+# Set AMD Architecture override
+import os
+# Disable Unsloth's version guard
+os.environ["UNSLOTH_VERSION_CHECK"] = "0"
+
+# Ensure the MI300X architecture is correctly recognized
+os.environ["HSA_OVERRIDE_GFX_VERSION"] = "9.4.2"
+os.environ["ROCM_PATH"] = "/opt/rocm"
+
+print(f"Torch version: {torch.__version__}")
+print(f"TorchVision version: {torchvision.__version__}")
+print(f"ROCm available: {torch.cuda.is_available()}")
+print(f"Device Name: {torch.cuda.get_device_name(0)}")
+
+from unsloth import FastLanguageModel
+import torch
+
+# Check if it works now
+print(f"Torch version: {torch.__version__}")
+print(f"Is ROCm available: {torch.cuda.is_available()}")
 
 ########  MODEL LOADER #################
 """
@@ -144,7 +164,30 @@ trainer_stats = trainer.train()
 model.save_pretrained("cpt_lora_model")
 tokenizer.save_pretrained("cpt_lora_model")
 model.save_pretrained_merged("final_cpt_model", tokenizer, save_method = "merged_16bit")
+# model.save_pretrained_merged("model_merged", tokenizer, save_method = "merged_16bit")
 model.save_pretrained_gguf("model_gguf", tokenizer, quantization_method = "q4_k_m")
 
 print(f"Time taken: {trainer_stats.metrics['train_runtime']} seconds")
 print(f"Peak VRAM used: {torch.cuda.max_memory_reserved() / 1024 / 1024 / 1024:.2f} GB")
+
+
+#### TO Test the model convert to GGUF
+"""
+File Will be in llama.cpp
+
+python3 convert_hf_to_gguf.py ../model_merged --outfile ../model.f16.gguf
+"""
+
+
+### ADDITIONAL 
+
+"""
+Quantize to 4-bit (Q4_K_M)
+
+# Move to the build folder where your binaries are
+cd build/bin/
+
+# Run the quantization
+./llama-quantize ../../model.f16.gguf ../../model.q4_k_m.gguf Q4_K_M
+
+"""

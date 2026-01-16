@@ -33,8 +33,8 @@ tokenizer = get_chat_template(
 # 4. Format your JSON data
 # We assume your JSON looks like: {"instruction": "...", "output": "..."}
 def formatting_prompts_func(examples):
-    instructions = examples["instruction"]
-    outputs      = examples["output"]
+    instructions = examples["Instruction"]
+    outputs      = examples["Output"]
     texts = []
     for instruction, output in zip(instructions, outputs):
         # We wrap your Q&A into the official Llama-3 chat headers
@@ -48,7 +48,7 @@ def formatting_prompts_func(examples):
     return { "text" : texts, }
 
 # Load your local JSON file
-dataset = load_dataset("json", data_files="your_data.json", split="train")
+dataset = load_dataset("json", data_files="dataset.json", split="train", field=None)
 dataset = dataset.map(formatting_prompts_func, batched = True)
 
 # 5. The SFT Trainer

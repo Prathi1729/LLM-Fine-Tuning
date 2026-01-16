@@ -7,10 +7,41 @@ pip install "unsloth[rocm] @ git+https://github.com/unslothai/unsloth.git"
 # 1. Update your system and install ROCm requirements
 sudo apt-get update && sudo apt-get install -y rocm-libs
 
-# 2. Install Unsloth for AMD (2026 Nightly)
-pip install "unsloth[rocm] @ git+https://github.com/unslothai/unsloth.git"
 
 # 3. Install PDF processing tool
 pip install pymupdf4llm
+pip install --upgrade torch==2.8.0 pytorch-triton-rocm torchvision torchaudio torchao==0.13.0 xformers --index-url https://download.pytorch.org/whl/rocm6.4
+
+pip install --no-deps unsloth unsloth-zoo
+pip install --no-deps git+https://github.com/unslothai/unsloth-zoo.git
+pip install "unsloth[amd] @ git+https://github.com/unslothai/unsloth"
 
 
+pip install numpy
+
+pip install huggingface_hub
+
+pip install unsloth_zoo
+
+pip install sentencepiece gguf
+
+cd /root/LLM-Fine-Tuning/llama.cpp
+# Remove the cache files that were accidentally written to the root
+rm -rf CMakeCache.txt CMakeFiles/
+
+git clone --recursive https://github.com/ggerganov/llama.cpp
+cd llama.cpp
+make clean && make -j
+
+# 1. Configure (Point to the 'build' directory explicitly)
+HIPCXX="$(hipconfig -l)/clang" \
+HIP_PATH="$(hipconfig -R)" \
+cmake -S . -B build \
+    -DGGML_HIP=ON \
+    -DAMDGPU_TARGETS=gfx942 \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DGGML_HIPBLAS=ON \
+    -DLLAMA_CURL=OFF
+
+# 2. Compile (Target the 'build' directory)
+cmake --build build --config Release -j $(nproc)
