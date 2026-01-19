@@ -1,4 +1,4 @@
-from unsloth import FastLanguageModel, PatchORPOTrainer
+from unsloth import FastLanguageModel, PatchDPOTrainer
 from trl import ORPOConfig, ORPOTrainer
 from datasets import load_dataset
 import torch
